@@ -1,4 +1,4 @@
-const CACHE = 'syd-entrees-v1';
+const CACHE = 'syd-entrees-v2';
 const ASSETS = [
   './',
   './index.html',

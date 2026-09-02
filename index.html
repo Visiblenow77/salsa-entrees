@@ -490,6 +490,110 @@
     color: var(--muted);
   }
   .caisse-summary strong{ color: var(--good); }
+  /* ===== Stats ===== */
+  :root{
+    --sv-cash:   #199e70;
+    --sv-carte:  #c98500;
+    --sv-twint:  #d55181;
+    --sv-invite: #9085e9;
+    --sv-grid:   #3a2536;
+    --sv-axis:   #55394f;
+  }
+  .stats-panel{
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    max-width: 1080px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .sv-filters{
+    display:flex; flex-wrap:wrap; gap: 16px;
+    padding: 12px 0 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .sv-fgroup{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .sv-flabel{ color: var(--muted); font-size: 12px; margin-right:2px; }
+  .sv-chip{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--muted);
+    font-family:'Work Sans',sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    padding: 7px 13px;
+    cursor: pointer;
+  }
+  .sv-chip[aria-pressed="true"]{
+    background: var(--surface-2);
+    border-color: var(--domingo);
+    color: var(--cream);
+  }
+  .sv-tiles{
+    display:grid; grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px; margin-bottom: 18px;
+  }
+  @media (max-width: 720px){ .sv-tiles{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  .sv-tile{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .sv-tile .k{ color: var(--muted); font-size: 12px; }
+  .sv-tile .v{
+    font-family:'Fraunces',serif; font-weight: 800;
+    font-size: 26px; line-height:1.2; color: var(--cream); margin-top: 2px;
+  }
+  .sv-tile .s{ color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .sv-section{ margin-bottom: 20px; }
+  .sv-h{
+    font-family:'Fraunces',serif; font-weight:600; font-size: 15px;
+    color: var(--cream); margin: 0 0 2px;
+  }
+  .sv-sub{ color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .sv-chartbox{ position: relative; }
+  .sv-chartbox svg{ display:block; width:100%; height:auto; }
+  .sv-tip{
+    position:absolute; pointer-events:none; opacity:0;
+    transform: translate(-50%, -110%);
+    background: #150b14; border: 1px solid var(--border);
+    border-radius: 10px; padding: 7px 10px;
+    font-size: 12px; color: var(--cream); white-space: nowrap;
+    transition: opacity .12s ease; z-index: 3;
+    box-shadow: 0 6px 18px rgba(0,0,0,.45);
+  }
+  .sv-tip .t-d{ color: var(--muted); font-size: 11px; }
+  .sv-mrow{ display:flex; flex-direction:column; gap: 9px; }
+  .sv-m{ display:grid; grid-template-columns: 86px 1fr auto; align-items:center; gap: 10px; }
+  .sv-m .m-l{ display:flex; align-items:center; gap:7px; color: var(--cream); font-size: 13px; font-weight:600; }
+  .sv-swatch{ width: 10px; height: 10px; border-radius: 3px; flex-shrink:0; }
+  .sv-track{ background: var(--surface); border-radius: 5px; height: 10px; overflow:hidden; }
+  .sv-fill{ height: 100%; border-radius: 5px; }
+  .sv-m .m-v{ color: var(--cream); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .sv-m .m-v span{ color: var(--muted); }
+  .sv-table{ width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sv-table th{
+    text-align: right; color: var(--muted); font-weight: 600; font-size: 11.5px;
+    padding: 6px 8px; border-bottom: 1px solid var(--border);
+  }
+  .sv-table th:first-child, .sv-table td:first-child{ text-align: left; }
+  .sv-table td{
+    text-align: right; padding: 8px; border-bottom: 1px solid var(--border);
+    color: var(--cream); font-variant-numeric: tabular-nums;
+  }
+  .sv-table tr:last-child td{ border-bottom: none; }
+  .sv-table.detail th:nth-child(2), .sv-table.detail td:nth-child(2){ text-align: left; }
+  .sv-dot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; }
+  .sv-actions{ display:flex; gap:10px; flex-wrap: wrap; }
+  .sv-scroll{ max-height: 260px; overflow-y: auto; }
+  .sv-empty{
+    color: var(--muted); font-size: 13px; text-align:center;
+    padding: 30px 10px; border: 1px dashed var(--border); border-radius: 14px;
+  }
 </style>
 </head>
 <body>
@@ -505,6 +609,7 @@
     <div class="header-actions">
       <button class="icon-btn" id="soireesToggleBtn">⚙️ Soirées</button>
       <button class="icon-btn" id="fondToggleBtn">💰 Fond de caisse</button>
+      <button class="icon-btn" id="statsToggleBtn">📊 Stats</button>
       <div class="totalbox">
         <div class="label">Total ce soir</div>
         <div class="amount-row">
@@ -522,6 +627,10 @@
 
   <div class="fond-overlay" id="soireesOverlay">
     <div class="fond-panel" id="soireesPanel" style="max-width:440px;"></div>
+  </div>
+
+  <div class="fond-overlay" id="statsOverlay">
+    <div class="stats-panel" id="statsPanel"></div>
   </div>
 
   <div class="main-grid">
@@ -960,7 +1069,9 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
         date: currentSession.date || todayISO(),
         soiree: currentSession.soiree,
         soireeName: so ? so.name : '',
-        totalAmount, totalCount: currentSession.entries.length, perMethod
+        totalAmount, totalCount: currentSession.entries.length, perMethod,
+        fondTotal: computeFondTotal(),
+        entries: currentSession.entries.map(e=>({m:e.method, a:e.amount, ts:e.ts}))
       });
       await saveHistory();
     }
@@ -969,6 +1080,289 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
     renderAll();
     showToast("Nouvelle soirée prête");
   });
+});
+
+/* ===== Statistiques ===== */
+const SV_COLORS = { cash:'#199e70', carte:'#c98500', twint:'#d55181', invite:'#9085e9' };
+const SV_BAR = '#c98500';
+let svRange = 90;      // jours ; 0 = tout
+let svSoiree = 'all';
+
+function svEsc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function svDate(d){
+  return new Date(d).toLocaleDateString('fr-CH', {day:'2-digit', month:'2-digit', year:'2-digit'});
+}
+function svShortDate(d){
+  return new Date(d).toLocaleDateString('fr-CH', {day:'2-digit', month:'2-digit'});
+}
+function svNum(n){
+  return Math.round(n).toLocaleString('fr-CH');
+}
+
+function svFiltered(){
+  let rows = history.slice().filter(h => h && h.perMethod);
+  if(svRange > 0){
+    const limit = Date.now() - svRange * 864e5;
+    rows = rows.filter(h => new Date(h.date).getTime() >= limit);
+  }
+  if(svSoiree !== 'all') rows = rows.filter(h => h.soiree === svSoiree);
+  rows.sort((a,b) => new Date(a.date) - new Date(b.date));
+  return rows;
+}
+
+function svMethod(h, key){
+  const m = h.perMethod && h.perMethod[key];
+  return { count: (m && m.count) || 0, amount: (m && m.amount) || 0 };
+}
+
+/* --- Barres verticales : entrées par soirée dans le temps --- */
+function svBarChart(rows){
+  if(rows.length === 0) return '<div class="sv-empty">Aucune soirée sur cette période.</div>';
+
+  const W = 800, H = 260, padL = 42, padT = 16, padB = 34;
+  const padR = rows.length > 1 ? 74 : 12;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const max = Math.max(...rows.map(r => r.totalCount), 1);
+  const niceMax = Math.ceil(max / 5) * 5 || 5;
+  const y = v => padT + plotH - (v / niceMax) * plotH;
+  const slot = plotW / rows.length;
+  const bw = Math.max(3, Math.min(46, slot - 2));   // 2px de respiration entre barres
+  const avg = rows.reduce((s, r) => s + r.totalCount, 0) / rows.length;
+
+  const ticks = [0, niceMax/2, niceMax].map(v =>
+    `<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${W-padR}" y2="${y(v).toFixed(1)}" stroke="var(--sv-grid)" stroke-width="1"/>
+     <text x="${padL-8}" y="${(y(v)+4).toFixed(1)}" text-anchor="end" fill="#C7AFBE" font-size="11">${Math.round(v)}</text>`
+  ).join('');
+
+  const step = Math.ceil(rows.length / 8);
+  const bars = rows.map((r, i) => {
+    const x = padL + i * slot + (slot - bw) / 2;
+    const h = Math.max(2, plotH - (y(r.totalCount) - padT));
+    const label = (i % step === 0 || i === rows.length - 1)
+      ? `<text x="${(x + bw/2).toFixed(1)}" y="${H - 12}" text-anchor="middle" fill="#C7AFBE" font-size="10.5">${svShortDate(r.date)}</text>` : '';
+    return `<rect class="sv-bar" x="${x.toFixed(1)}" y="${y(r.totalCount).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}"
+        rx="4" fill="${SV_BAR}"
+        data-i="${i}" data-cx="${(x + bw/2).toFixed(1)}" data-cy="${y(r.totalCount).toFixed(1)}"
+        tabindex="0" role="img"
+        aria-label="${svEsc(r.soireeName || 'Soirée')} du ${svDate(r.date)} : ${r.totalCount} entrées, ${fmtCHF(r.totalAmount)}"></rect>${label}`;
+  }).join('');
+
+  const avgLine = rows.length > 1
+    ? `<line x1="${padL}" y1="${y(avg).toFixed(1)}" x2="${W-padR+4}" y2="${y(avg).toFixed(1)}" stroke="#C7AFBE" stroke-width="1.5" stroke-dasharray="5 4" opacity=".75"/>
+       <text x="${W-padR+8}" y="${(y(avg)-2).toFixed(1)}" text-anchor="start" fill="#C7AFBE" font-size="10.5">moyenne</text>
+       <text x="${W-padR+8}" y="${(y(avg)+11).toFixed(1)}" text-anchor="start" fill="#F3E9DC" font-size="12" font-weight="600">${avg.toFixed(1)}</text>` : '';
+
+  return `<div class="sv-chartbox" id="svChartBox">
+    <svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Entrées par soirée">
+      ${ticks}${avgLine}${bars}
+      <line x1="${padL}" y1="${padT+plotH}" x2="${W-padR}" y2="${padT+plotH}" stroke="var(--sv-axis)" stroke-width="1"/>
+    </svg>
+    <div class="sv-tip" id="svTip"></div>
+  </div>`;
+}
+
+/* --- Barres horizontales : répartition des paiements --- */
+function svMethodBars(rows){
+  const tot = {};
+  METHODS.forEach(m => tot[m.key] = { count:0, amount:0 });
+  rows.forEach(h => METHODS.forEach(m => {
+    const d = svMethod(h, m.key);
+    tot[m.key].count += d.count;
+    tot[m.key].amount += d.amount;
+  }));
+  const totalCount = METHODS.reduce((s,m) => s + tot[m.key].count, 0);
+  if(totalCount === 0) return '<div class="sv-empty">Aucune entrée sur cette période.</div>';
+  const maxCount = Math.max(...METHODS.map(m => tot[m.key].count), 1);
+
+  return '<div class="sv-mrow">' + METHODS.map(m => {
+    const d = tot[m.key];
+    const pct = (d.count / totalCount) * 100;
+    const c = SV_COLORS[m.key];
+    return `<div class="sv-m">
+      <div class="m-l"><span class="sv-swatch" style="background:${c}"></span>${svEsc(m.label)}</div>
+      <div class="sv-track"><div class="sv-fill" style="width:${(d.count/maxCount*100).toFixed(1)}%;background:${c}"></div></div>
+      <div class="m-v">${svNum(d.count)} <span>(${pct.toFixed(0)}%)</span> · ${fmtCHF(d.amount)}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+/* --- Tableau : comparaison par type de soirée --- */
+function svSoireeTable(rows){
+  const keys = [...new Set(rows.map(h => h.soiree))];
+  if(keys.length === 0) return '';
+  const stats = keys.map(k => {
+    const rs = rows.filter(h => h.soiree === k);
+    const count = rs.reduce((s,h) => s + h.totalCount, 0);
+    const amount = rs.reduce((s,h) => s + h.totalAmount, 0);
+    const so = SOIREES.find(s => s.key === k);
+    return {
+      key: k,
+      name: (rs[rs.length-1] && rs[rs.length-1].soireeName) || (so && so.name) || 'Soirée',
+      accent: (so && so.accent) || '#C7AFBE',
+      nights: rs.length, count, amount,
+      avg: count / rs.length
+    };
+  }).sort((a,b) => b.amount - a.amount);
+
+  return `<table class="sv-table">
+    <thead><tr><th>Soirée</th><th>Soirées</th><th>Entrées</th><th>Moy./soirée</th><th>Encaissé</th></tr></thead>
+    <tbody>${stats.map(s => `<tr>
+      <td><span class="sv-dot" style="background:${s.accent}"></span>${svEsc(s.name)}</td>
+      <td>${s.nights}</td><td>${svNum(s.count)}</td>
+      <td>${s.avg.toFixed(1)}</td><td>${fmtCHF(s.amount)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+/* --- Tableau détaillé (vue données) --- */
+function svDetailTable(rows){
+  if(rows.length === 0) return '';
+  return `<div class="sv-scroll"><table class="sv-table detail">
+    <thead><tr><th>Date</th><th>Soirée</th><th>Entrées</th><th>Cash</th><th>Carte</th><th>TWINT</th><th>Invités</th><th>Total</th></tr></thead>
+    <tbody>${rows.slice().reverse().map(h => `<tr>
+      <td>${svDate(h.date)}</td><td>${svEsc(h.soireeName || '—')}</td>
+      <td>${h.totalCount}</td>
+      <td>${svMethod(h,'cash').count}</td>
+      <td>${svMethod(h,'carte').count}</td>
+      <td>${svMethod(h,'twint').count}</td>
+      <td>${svMethod(h,'invite').count}</td>
+      <td>${fmtCHF(h.totalAmount)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function svExportCSV(){
+  const rows = svFiltered();
+  if(rows.length === 0){ showToast("Rien à exporter"); return; }
+  const head = ['Date','Soiree','Entrees','Cash (nb)','Cash (CHF)','Carte (nb)','Carte (CHF)','TWINT (nb)','TWINT (CHF)','Invites (nb)','Total (CHF)'];
+  const lines = rows.map(h => [
+    h.date, (h.soireeName||''), h.totalCount,
+    svMethod(h,'cash').count, svMethod(h,'cash').amount,
+    svMethod(h,'carte').count, svMethod(h,'carte').amount,
+    svMethod(h,'twint').count, svMethod(h,'twint').amount,
+    svMethod(h,'invite').count, h.totalAmount
+  ]);
+  const csv = '﻿' + [head, ...lines].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `syd-soirees-${todayISO()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  showToast("Export CSV créé");
+}
+
+function renderStatsPanel(){
+  const panel = document.getElementById('statsPanel');
+  const rows = svFiltered();
+  const nights = rows.length;
+  const entries = rows.reduce((s,h) => s + h.totalCount, 0);
+  const amount = rows.reduce((s,h) => s + h.totalAmount, 0);
+  const paying = rows.reduce((s,h) => s + (h.totalCount - svMethod(h,'invite').count), 0);
+  const best = rows.slice().sort((a,b) => b.totalCount - a.totalCount)[0];
+
+  const ranges = [[30,'30 jours'],[90,'3 mois'],[365,'12 mois'],[0,'Tout']];
+  const soireeChips = [['all','Toutes'], ...SOIREES.map(s => [s.key, s.name])];
+
+  panel.innerHTML = `
+    <div class="fond-panel-header">
+      <div class="block-title">📊 Statistiques des soirées</div>
+      <button class="fond-close-btn" id="statsCloseBtn" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="sv-filters">
+      <div class="sv-fgroup"><span class="sv-flabel">Période</span>
+        ${ranges.map(([v,l]) => `<button class="sv-chip" data-range="${v}" aria-pressed="${svRange===v}">${l}</button>`).join('')}
+      </div>
+      <div class="sv-fgroup"><span class="sv-flabel">Soirée</span>
+        ${soireeChips.map(([k,l]) => `<button class="sv-chip" data-soiree="${svEsc(k)}" aria-pressed="${svSoiree===k}">${svEsc(l)}</button>`).join('')}
+      </div>
+    </div>
+
+    ${nights === 0 ? `<div class="sv-empty">Pas encore de soirée archivée sur cette sélection.<br>Les statistiques se remplissent quand tu clôtures une soirée avec « Nouvelle soirée ».</div>` : `
+    <div class="sv-tiles">
+      <div class="sv-tile"><div class="k">Soirées</div><div class="v">${nights}</div><div class="s">archivées</div></div>
+      <div class="sv-tile"><div class="k">Entrées</div><div class="v">${svNum(entries)}</div><div class="s">dont ${svNum(entries - paying)} invités</div></div>
+      <div class="sv-tile"><div class="k">Encaissé</div><div class="v">${fmtCHF(amount)}</div><div class="s">${paying ? fmtCHF(amount/paying) + ' / entrée payante' : '—'}</div></div>
+      <div class="sv-tile"><div class="k">Moyenne</div><div class="v">${(entries/nights).toFixed(1)}</div><div class="s">entrées par soirée</div></div>
+    </div>
+
+    <div class="sv-section">
+      <h3 class="sv-h">Entrées par soirée</h3>
+      <div class="sv-sub">Chronologique${best ? ` · record : ${svEsc(best.soireeName||'soirée')} du ${svDate(best.date)}, ${best.totalCount} entrées` : ''}</div>
+      ${svBarChart(rows)}
+    </div>
+
+    <div class="sv-section">
+      <h3 class="sv-h">Répartition des paiements</h3>
+      <div class="sv-sub">Nombre d'entrées, part du total et montant encaissé</div>
+      ${svMethodBars(rows)}
+    </div>
+
+    <div class="sv-section">
+      <h3 class="sv-h">Par type de soirée</h3>
+      <div class="sv-sub">Sur la période sélectionnée</div>
+      ${svSoireeTable(rows)}
+    </div>
+
+    <div class="sv-section">
+      <h3 class="sv-h">Détail des soirées</h3>
+      <div class="sv-sub">De la plus récente à la plus ancienne</div>
+      ${svDetailTable(rows)}
+    </div>
+
+    <div class="sv-actions">
+      <button class="btn-secondary" id="svExportBtn">⬇︎ Exporter en CSV</button>
+    </div>`}
+  `;
+
+  panel.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
+    svRange = parseInt(b.dataset.range, 10); renderStatsPanel();
+  }));
+  panel.querySelectorAll('[data-soiree]').forEach(b => b.addEventListener('click', () => {
+    svSoiree = b.dataset.soiree; renderStatsPanel();
+  }));
+  const closeBtn = document.getElementById('statsCloseBtn');
+  if(closeBtn) closeBtn.addEventListener('click', () => document.getElementById('statsOverlay').classList.remove('open'));
+  const exp = document.getElementById('svExportBtn');
+  if(exp) exp.addEventListener('click', svExportCSV);
+
+  // Infobulle (souris + tactile + clavier)
+  const box = document.getElementById('svChartBox');
+  const tip = document.getElementById('svTip');
+  if(box && tip){
+    const show = el => {
+      const r = rows[parseInt(el.dataset.i, 10)];
+      if(!r) return;
+      const invites = svMethod(r,'invite').count;
+      tip.innerHTML = `<div>${svEsc(r.soireeName || 'Soirée')} — <strong>${r.totalCount}</strong> entrées</div>
+        <div class="t-d">${svDate(r.date)} · ${fmtCHF(r.totalAmount)}${invites ? ` · ${invites} invité${invites>1?'s':''}` : ''}</div>`;
+      const svg = box.querySelector('svg');
+      const scale = svg.getBoundingClientRect().width / 800;
+      tip.style.left = (parseFloat(el.dataset.cx) * scale) + 'px';
+      tip.style.top  = (parseFloat(el.dataset.cy) * scale) + 'px';
+      tip.style.opacity = 1;
+    };
+    const hide = () => { tip.style.opacity = 0; };
+    box.querySelectorAll('.sv-bar').forEach(el => {
+      el.addEventListener('mouseenter', () => show(el));
+      el.addEventListener('focus', () => show(el));
+      el.addEventListener('mouseleave', hide);
+      el.addEventListener('blur', hide);
+      el.addEventListener('touchstart', e => { show(el); }, {passive:true});
+    });
+    box.addEventListener('touchend', () => setTimeout(hide, 2200), {passive:true});
+  }
+}
+
+document.getElementById('statsToggleBtn').addEventListener('click', () => {
+  renderStatsPanel();
+  document.getElementById('statsOverlay').classList.add('open');
+});
+document.getElementById('statsOverlay').addEventListener('click', e => {
+  if(e.target.id === 'statsOverlay') e.currentTarget.classList.remove('open');
 });
 
 (async function init(){
