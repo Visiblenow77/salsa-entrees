@@ -1,4 +1,4 @@
-const CACHE = 'syd-entrees-v6';
+const CACHE = 'syd-entrees-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -37,7 +37,9 @@ self.addEventListener('fetch', e => {
     const target = url.pathname.endsWith('live.html') ? './live.html' : './index.html';
     // Reseau d'abord : la derniere version gagne, le cache prend le relais hors ligne
     e.respondWith(
-      fetch(req).then(res => {
+      // cache:'reload' contourne le cache HTTP du navigateur : la tablette voit
+      // toujours la derniere version publiee, sans attendre l'expiration du cache
+      fetch(new Request(req.url, { cache: 'reload', credentials: 'omit' })).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(target, copy)).catch(() => {});
         return res;

@@ -516,6 +516,13 @@
   .sy-dot.sy-ok{ background:#6FBF8B; }
   .sy-dot.sy-pending{ background:#D6A34D; }
   .sy-dot.sy-error{ background:#E2143F; }
+  .sy-qr{
+    display:flex; justify-content:center; align-items:center;
+    background:#fff; border-radius:14px; padding:14px; margin:14px 0 6px;
+    min-height:60px;
+  }
+  .sy-qr canvas, .sy-qr img{ display:block; }
+  .sy-qr .sy-qr-wait{ color:#666; font-size:12.5px; }
   .sy-link{
     background: var(--surface); border:1px solid var(--border); border-radius:10px;
     padding:10px 12px; margin:12px 0 4px; color: var(--cream);
@@ -1515,6 +1522,9 @@ function renderLivePanel(){
     </div>
     ${ k ? `
       <div class="empty-hint">Le suivi est actif. Ouvre ce lien sur ton téléphone pour voir les entrées en direct. Il est en lecture seule.</div>
+      <div class="empty-hint" style="margin-top:10px;">Scanne ce code avec l'appareil photo de ton téléphone :</div>
+      <div class="sy-qr" id="syQr"><span class="sy-qr-wait">Génération du code…</span></div>
+      <div class="empty-hint">Ou copie le lien :</div>
       <div class="sy-link" id="syLinkBox">${syLink()}</div>
       <div class="actions-row">
         <button class="btn-secondary" id="syCopyBtn">Copier le lien</button>
@@ -1559,6 +1569,42 @@ function renderLivePanel(){
       showToast("Lien sélectionné, appuie sur Copier");
     }
   });
+  if(k) syDrawQR(syLink());
+}
+
+/* QR code : librairie chargee a la demande, uniquement a l'ouverture du panneau.
+   Une fois chargee elle est mise en cache par le service worker. */
+function syLoadQRLib(){
+  if(window.QRCode) return Promise.resolve(true);
+  if(window.__syQRLoading) return window.__syQRLoading;
+  window.__syQRLoading = new Promise(resolve => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    sc.onload  = ()=> resolve(!!window.QRCode);
+    sc.onerror = ()=> resolve(false);
+    document.head.appendChild(sc);
+  });
+  return window.__syQRLoading;
+}
+
+async function syDrawQR(text){
+  const box = document.getElementById('syQr');
+  if(!box) return;
+  const ok = await syLoadQRLib();
+  const box2 = document.getElementById('syQr');
+  if(!box2) return;
+  if(!ok){
+    box2.innerHTML = '<span class="sy-qr-wait">Code indisponible hors ligne &mdash; utilise le lien ci-dessous.</span>';
+    return;
+  }
+  box2.innerHTML = '';
+  try{
+    new QRCode(box2, { text: text, width: 190, height: 190,
+                       colorDark: '#000000', colorLight: '#ffffff',
+                       correctLevel: QRCode.CorrectLevel.M });
+  }catch(e){
+    box2.innerHTML = '<span class="sy-qr-wait">Code indisponible &mdash; utilise le lien ci-dessous.</span>';
+  }
 }
 
 document.getElementById('liveToggleBtn').addEventListener('click', ()=>{
