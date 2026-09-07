@@ -507,6 +507,21 @@
     color: var(--muted);
   }
   .caisse-summary strong{ color: var(--good); }
+
+  /* ===== Suivi a distance ===== */
+  .sy-dot{
+    display:inline-block; width:9px; height:9px; border-radius:50%;
+    background: var(--border); margin-left:7px; vertical-align: middle; flex-shrink:0;
+  }
+  .sy-dot.sy-ok{ background:#6FBF8B; }
+  .sy-dot.sy-pending{ background:#D6A34D; }
+  .sy-dot.sy-error{ background:#E2143F; }
+  .sy-link{
+    background: var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; margin:12px 0 4px; color: var(--cream);
+    font-size:12.5px; word-break: break-all; user-select: all;
+  }
+
   /* ===== Stats ===== */
   :root{
     --sv-cash:   #199e70;
@@ -627,6 +642,7 @@
       <button class="icon-btn" id="soireesToggleBtn">⚙️ Soirées</button>
       <button class="icon-btn" id="fondToggleBtn">💰 Fond de caisse</button>
       <button class="icon-btn" id="statsToggleBtn">📊 Stats</button>
+      <button class="icon-btn" id="liveToggleBtn">📡 Suivi<span class="sy-dot" id="syDot"></span></button>
       <div class="totalbox">
         <div class="label">Total ce soir</div>
         <div class="amount-row">
@@ -644,6 +660,10 @@
 
   <div class="fond-overlay" id="soireesOverlay">
     <div class="fond-panel" id="soireesPanel" style="max-width:440px;"></div>
+  </div>
+
+  <div class="fond-overlay" id="liveOverlay">
+    <div class="fond-panel" id="livePanel" style="max-width:520px;"></div>
   </div>
 
   <div class="fond-overlay" id="statsOverlay">
@@ -805,6 +825,7 @@ async function saveSession(){
   try{
     localStorage.setItem('syd-current-session', JSON.stringify(currentSession));
   }catch(e){ showToast("Erreur de sauvegarde"); }
+  if(typeof syPush === 'function') syPush();
 }
 
 async function saveHistory(){
@@ -1400,6 +1421,155 @@ document.getElementById('statsToggleBtn').addEventListener('click', () => {
 document.getElementById('statsOverlay').addEventListener('click', e => {
   if(e.target.id === 'statsOverlay') e.currentTarget.classList.remove('open');
 });
+
+/* ===== Suivi a distance ===== */
+/* ===== Suivi a distance (emission depuis la tablette) ===== */
+const SY_DB   = 'https://salsa-entrees-live-default-rtdb.europe-west1.firebasedatabase.app';
+const SY_VIEW = 'https://visiblenow77.github.io/salsa-entrees/live.html';
+
+function syKey(){ try{ return localStorage.getItem('syd-live-key') || ''; }catch(e){ return ''; } }
+function sySetKey(k){ try{ localStorage.setItem('syd-live-key', k); }catch(e){} }
+function syNewKey(){
+  const a = new Uint8Array(16);
+  (self.crypto || window.crypto).getRandomValues(a);
+  return Array.from(a, b => b.toString(16).padStart(2,'0')).join('');
+}
+function syLink(){ return SY_VIEW + '#' + syKey(); }
+
+function syPayload(){
+  const so = currentSoireeObj();
+  let amount = 0;
+  const per = {};
+  METHODS.forEach(m => per[m.key] = { c:0, a:0 });
+  currentSession.entries.forEach(e => {
+    amount += e.amount;
+    if(per[e.method]){ per[e.method].c += 1; per[e.method].a += e.amount; }
+  });
+  return {
+    t: Date.now(),
+    date: currentSession.date || todayISO(),
+    soiree: so ? so.name : null,
+    count: currentSession.entries.length,
+    amount: Math.round(amount * 100) / 100,
+    per: per,
+    fond: computeFondTotal(),
+    labels: METHODS.map(m => ({ k:m.key, l:m.label }))
+  };
+}
+
+let syTimer = null, syBusy = false, syRetry = null;
+let syState = 'off';   // off | ok | pending | error
+
+function sySetState(s){
+  if(syState === s) return;
+  syState = s;
+  const dot = document.getElementById('syDot');
+  if(dot){
+    dot.className = 'sy-dot sy-' + s;
+    dot.title = s === 'ok' ? 'Suivi a distance actif'
+              : s === 'pending' ? 'Envoi en cours...'
+              : s === 'error' ? 'Pas de reseau, envoi en attente'
+              : 'Suivi a distance desactive';
+  }
+}
+
+function syPush(immediate){
+  const k = syKey();
+  if(!k){ sySetState('off'); return; }
+  clearTimeout(syTimer);
+  syTimer = setTimeout(sySend, immediate ? 0 : 1200);
+}
+
+async function sySend(){
+  const k = syKey();
+  if(!k) return;
+  if(syBusy){ syPush(); return; }
+  syBusy = true;
+  sySetState('pending');
+  try{
+    const res = await fetch(SY_DB + '/live/' + k + '.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(syPayload())
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    sySetState('ok');
+    clearTimeout(syRetry);
+  }catch(e){
+    sySetState('error');
+    clearTimeout(syRetry);
+    syRetry = setTimeout(sySend, 15000);   // rattrapage quand le reseau revient
+  }
+  syBusy = false;
+}
+
+window.addEventListener('online', ()=> syPush(true));
+
+function renderLivePanel(){
+  const panel = document.getElementById('livePanel');
+  const k = syKey();
+  panel.innerHTML = `
+    <div class="fond-panel-header">
+      <div class="block-title">Suivi a distance</div>
+      <button class="fond-close-btn" id="liveCloseBtn">&#10005;</button>
+    </div>
+    ${ k ? `
+      <div class="empty-hint">Le suivi est actif. Ouvre ce lien sur ton telephone pour voir les entrees en direct. Il est en lecture seule.</div>
+      <div class="sy-link" id="syLinkBox">${syLink()}</div>
+      <div class="actions-row">
+        <button class="btn-secondary" id="syCopyBtn">Copier le lien</button>
+        <button class="btn-secondary danger" id="syOffBtn">Desactiver le suivi</button>
+      </div>
+      <div class="empty-hint" style="margin-top:10px;">Desactiver genere une nouvelle cle : l'ancien lien cesse de fonctionner.</div>
+    ` : `
+      <div class="empty-hint">Active le suivi pour voir les entrees depuis ton telephone pendant la soiree. Seuls le nombre d'entrees, le montant et la repartition des paiements sont envoyes &mdash; aucune donnee client.</div>
+      <div class="actions-row">
+        <button class="btn-secondary" id="syOnBtn">Activer le suivi</button>
+      </div>
+    ` }
+  `;
+  document.getElementById('liveCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('liveOverlay').classList.remove('open');
+  });
+  const on = document.getElementById('syOnBtn');
+  if(on) on.addEventListener('click', ()=>{
+    sySetKey(syNewKey());
+    syPush(true);
+    renderLivePanel();
+    showToast("Suivi active");
+  });
+  const off = document.getElementById('syOffBtn');
+  if(off) off.addEventListener('click', ()=>{
+    showModal("Desactiver le suivi ? Le lien actuel cessera de fonctionner.", async ()=>{
+      const old = syKey();
+      try{ await fetch(SY_DB + '/live/' + old + '.json', { method:'DELETE' }); }catch(e){}
+      sySetKey('');
+      sySetState('off');
+      renderLivePanel();
+      showToast("Suivi desactive");
+    });
+  });
+  const copy = document.getElementById('syCopyBtn');
+  if(copy) copy.addEventListener('click', async ()=>{
+    try{ await navigator.clipboard.writeText(syLink()); showToast("Lien copie"); }
+    catch(e){
+      const r = document.createRange();
+      r.selectNode(document.getElementById('syLinkBox'));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      showToast("Lien selectionne, fais copier");
+    }
+  });
+}
+
+document.getElementById('liveToggleBtn').addEventListener('click', ()=>{
+  renderLivePanel();
+  document.getElementById('liveOverlay').classList.add('open');
+});
+document.getElementById('liveOverlay').addEventListener('click', e => {
+  if(e.target.id === 'liveOverlay') e.currentTarget.classList.remove('open');
+});
+sySetState(syKey() ? 'ok' : 'off');
+if(syKey()) syPush(true);
 
 (async function init(){
   loadSoireesConfig();

@@ -1,7 +1,8 @@
-const CACHE = 'syd-entrees-v5';
+const CACHE = 'syd-entrees-v6';
 const ASSETS = [
   './',
   './index.html',
+  './live.html',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png'
@@ -23,21 +24,29 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  const isPage = req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('index.html');
+
+  // Le suivi a distance ne passe jamais par le cache
+  if (url.hostname.endsWith('firebasedatabase.app')) return;
+
+  const isPage = req.mode === 'navigate'
+              || url.pathname.endsWith('/')
+              || url.pathname.endsWith('index.html')
+              || url.pathname.endsWith('live.html');
 
   if (isPage) {
-    // Réseau d'abord : la dernière version gagne, le cache prend le relais hors ligne
+    const target = url.pathname.endsWith('live.html') ? './live.html' : './index.html';
+    // Reseau d'abord : la derniere version gagne, le cache prend le relais hors ligne
     e.respondWith(
       fetch(req).then(res => {
         const copy = res.clone();
-        caches.open(CACHE).then(c => c.put('./index.html', copy)).catch(() => {});
+        caches.open(CACHE).then(c => c.put(target, copy)).catch(() => {});
         return res;
-      }).catch(() => caches.match('./index.html').then(hit => hit || caches.match('./')))
+      }).catch(() => caches.match(target).then(hit => hit || caches.match('./')))
     );
     return;
   }
 
-  // Le reste (icônes, manifeste, polices) : cache d'abord
+  // Le reste (icones, manifeste, polices) : cache d'abord
   e.respondWith(
     caches.match(req).then(hit => hit || fetch(req).then(res => {
       const copy = res.clone();
