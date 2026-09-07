@@ -508,7 +508,7 @@
   }
   .caisse-summary strong{ color: var(--good); }
 
-  /* ===== Suivi a distance ===== */
+  /* ===== Suivi à distance ===== */
   .sy-dot{
     display:inline-block; width:9px; height:9px; border-radius:50%;
     background: var(--border); margin-left:7px; vertical-align: middle; flex-shrink:0;
@@ -1422,8 +1422,8 @@ document.getElementById('statsOverlay').addEventListener('click', e => {
   if(e.target.id === 'statsOverlay') e.currentTarget.classList.remove('open');
 });
 
-/* ===== Suivi a distance ===== */
-/* ===== Suivi a distance (emission depuis la tablette) ===== */
+/* ===== Suivi à distance ===== */
+/* ===== Suivi à distance (émission depuis la tablette) ===== */
 const SY_DB   = 'https://salsa-entrees-live-default-rtdb.europe-west1.firebasedatabase.app';
 const SY_VIEW = 'https://visiblenow77.github.io/salsa-entrees/live.html';
 
@@ -1466,10 +1466,10 @@ function sySetState(s){
   const dot = document.getElementById('syDot');
   if(dot){
     dot.className = 'sy-dot sy-' + s;
-    dot.title = s === 'ok' ? 'Suivi a distance actif'
-              : s === 'pending' ? 'Envoi en cours...'
-              : s === 'error' ? 'Pas de reseau, envoi en attente'
-              : 'Suivi a distance desactive';
+    dot.title = s === 'ok' ? 'Suivi à distance actif'
+              : s === 'pending' ? 'Envoi en cours…'
+              : s === 'error' ? 'Pas de réseau, envoi en attente'
+              : 'Suivi à distance désactivé';
   }
 }
 
@@ -1498,7 +1498,7 @@ async function sySend(){
   }catch(e){
     sySetState('error');
     clearTimeout(syRetry);
-    syRetry = setTimeout(sySend, 15000);   // rattrapage quand le reseau revient
+    syRetry = setTimeout(sySend, 15000);   // rattrapage quand le réseau revient
   }
   syBusy = false;
 }
@@ -1510,19 +1510,19 @@ function renderLivePanel(){
   const k = syKey();
   panel.innerHTML = `
     <div class="fond-panel-header">
-      <div class="block-title">Suivi a distance</div>
+      <div class="block-title">Suivi à distance</div>
       <button class="fond-close-btn" id="liveCloseBtn">&#10005;</button>
     </div>
     ${ k ? `
-      <div class="empty-hint">Le suivi est actif. Ouvre ce lien sur ton telephone pour voir les entrees en direct. Il est en lecture seule.</div>
+      <div class="empty-hint">Le suivi est actif. Ouvre ce lien sur ton téléphone pour voir les entrées en direct. Il est en lecture seule.</div>
       <div class="sy-link" id="syLinkBox">${syLink()}</div>
       <div class="actions-row">
         <button class="btn-secondary" id="syCopyBtn">Copier le lien</button>
-        <button class="btn-secondary danger" id="syOffBtn">Desactiver le suivi</button>
+        <button class="btn-secondary danger" id="syOffBtn">Désactiver le suivi</button>
       </div>
-      <div class="empty-hint" style="margin-top:10px;">Desactiver genere une nouvelle cle : l'ancien lien cesse de fonctionner.</div>
+      <div class="empty-hint" style="margin-top:10px;">Désactiver génère une nouvelle clé : l'ancien lien cesse de fonctionner.</div>
     ` : `
-      <div class="empty-hint">Active le suivi pour voir les entrees depuis ton telephone pendant la soiree. Seuls le nombre d'entrees, le montant et la repartition des paiements sont envoyes &mdash; aucune donnee client.</div>
+      <div class="empty-hint">Active le suivi pour voir les entrées depuis ton téléphone pendant la soirée. Seuls le nombre d'entrées, le montant et la répartition des paiements sont envoyés &mdash; aucune donnée client.</div>
       <div class="actions-row">
         <button class="btn-secondary" id="syOnBtn">Activer le suivi</button>
       </div>
@@ -1536,27 +1536,27 @@ function renderLivePanel(){
     sySetKey(syNewKey());
     syPush(true);
     renderLivePanel();
-    showToast("Suivi active");
+    showToast("Suivi activé");
   });
   const off = document.getElementById('syOffBtn');
   if(off) off.addEventListener('click', ()=>{
-    showModal("Desactiver le suivi ? Le lien actuel cessera de fonctionner.", async ()=>{
+    showModal("Désactiver le suivi ? Le lien actuel cessera de fonctionner.", async ()=>{
       const old = syKey();
       try{ await fetch(SY_DB + '/live/' + old + '.json', { method:'DELETE' }); }catch(e){}
       sySetKey('');
       sySetState('off');
       renderLivePanel();
-      showToast("Suivi desactive");
+      showToast("Suivi désactivé");
     });
   });
   const copy = document.getElementById('syCopyBtn');
   if(copy) copy.addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText(syLink()); showToast("Lien copie"); }
+    try{ await navigator.clipboard.writeText(syLink()); showToast("Lien copié"); }
     catch(e){
       const r = document.createRange();
       r.selectNode(document.getElementById('syLinkBox'));
       const s = getSelection(); s.removeAllRanges(); s.addRange(r);
-      showToast("Lien selectionne, fais copier");
+      showToast("Lien sélectionné, appuie sur Copier");
     }
   });
 }
