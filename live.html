@@ -102,8 +102,11 @@ function render(d){
   const labels = {};
   (d.labels || []).forEach(x => labels[x.k] = x.l);
   const per = d.per || {};
-  const maxC = Math.max(1, ...Object.keys(per).map(k => per[k].c || 0));
-  const rows = Object.keys(per).filter(k => (per[k].c || 0) > 0).map(k => `
+  // on garde l'ordre des modes de paiement de l'app, pas l'ordre alphabetique
+  const order = (d.labels || []).map(x => x.k).filter(k => per[k]);
+  Object.keys(per).forEach(k => { if(order.indexOf(k) === -1) order.push(k); });
+  const maxC = Math.max(1, ...order.map(k => per[k].c || 0));
+  const rows = order.filter(k => (per[k].c || 0) > 0).map(k => `
     <div class="m">
       <div class="l"><span class="sw" style="background:${COLORS[k] || 'var(--muted)'}"></span>${labels[k] || k}</div>
       <div class="track"><div class="fill" style="width:${Math.round((per[k].c/maxC)*100)}%;background:${COLORS[k] || 'var(--muted)'}"></div></div>
